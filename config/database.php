@@ -5,7 +5,7 @@ use Illuminate\Support\Str;
 $db_config = get_db_config();
 
 return [
-    'default' => $db_config['connection'],
+
     /*
     |--------------------------------------------------------------------------
     | Default Database Connection Name
@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => $db_config['connection'],
 
     /*
     |--------------------------------------------------------------------------
