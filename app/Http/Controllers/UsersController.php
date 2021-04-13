@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class UsersController extends Controller
 {
@@ -48,9 +50,11 @@ class UsersController extends Controller
             'password' => bcrypt($request->password),
         ]);
 
+        $this->sendEmailConfirmationTo($user);
+
         Auth::login($user);
 
-        session()->flash('success', "Welcome!");
+        session()->flash('success', "Confirmation email has sent to your email, please check.");
 
         return redirect()->route('users.show', [$user]);
     }
@@ -90,5 +94,32 @@ class UsersController extends Controller
         $user->delete();
         session()->flash('success', 'User has been deleted successfully.');
         return back();
+    }
+
+    protected function sendEmailConfirmationTo($user)
+    {
+        $view = 'emails.confirm';
+        $data = compact('user');
+        $from = 'summer@example.com';
+        $name = 'Summer';
+        $to = $user->email;
+        $subject = "Thank you for signing up with Weibo App! Please confirm your email.";
+
+        Mail::send($view, $data, function ($message) use ($from, $name, $to, $subject) {
+            $message->from($from, $name)->to($to)->subject($subject);
+        });
+    }
+
+    public function confirmEmail($token)
+    {
+        $user = User::where('activation_token', $token)->firstOrFail();
+
+        $user->activated = true;
+        $user->activation_token = null;
+        $user->save();
+
+        Auth::login($user);
+        session()->flash('success', 'Congratulations! Activation success!');
+        return redirect()->route('users.show', [$user]);
     }
 }
